@@ -2,7 +2,7 @@
 // Inventory and Import both read from this single source of truth.
 import { createContext, useCallback, useContext, useEffect, useState } from "react";
 import { supabase } from "../lib/supabase.js";
-import { MEDICINES } from "../lib/forecast.js";
+import { MEDICINES, stockMedicines } from "../lib/forecast.js";
 
 const GUEST_KEY = "stockout-shield-guest-v1";
 const StockContext = createContext(null);
@@ -52,6 +52,23 @@ export function StockProvider({ children }) {
   useEffect(() => {
     refresh().catch(() => setRows([]));
   }, [refresh]);
+
+  // Live updates: any insert/update/delete on this user's stock (e.g. from another tab or
+  // device) refreshes every page. Row-level security limits events to the user's own rows.
+  useEffect(() => {
+    if (!user || !supabase) return;
+    const channel = supabase
+      .channel(`medicine_stock:${user.id}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "medicine_stock", filter: `user_id=eq.${user.id}` },
+        () => refresh().catch(() => {}),
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user, refresh]);
 
   function updateGuest(next) {
     sessionStorage.setItem(GUEST_KEY, JSON.stringify(next));
@@ -104,7 +121,12 @@ export function StockProvider({ children }) {
     }
   }
 
-  const value = { user, guest, ready, rows: guest ?? rows, refresh, add, remove, enterGuest, leave };
+  const activeRows = guest ?? rows;
+  // Signed-in users and guests forecast their own stock; logged-out visitors see the demo set.
+  const isDemo = !user && guest === null;
+  const medicines = isDemo ? MEDICINES : stockMedicines(activeRows);
+
+  const value = { user, guest, ready, rows: activeRows, medicines, isDemo, refresh, add, remove, enterGuest, leave };
   return <StockContext.Provider value={value}>{children}</StockContext.Provider>;
 }
 

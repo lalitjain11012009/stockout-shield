@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import { Area, CartesianGrid, ComposedChart, Line, ResponsiveContainer, XAxis, YAxis, Tooltip } from "recharts";
 import PageHeading from "../components/PageHeading.jsx";
-import { MEDICINES, forecast, history, daysToStockout, guestMedicines } from "../lib/forecast.js";
+import { forecast, history, daysToStockout } from "../lib/forecast.js";
 import { SUPPLIERS } from "../lib/suppliers.js";
 import { useStock } from "../context/StockContext.jsx";
 import hero from "../assets/hero.jpg";
@@ -24,8 +24,7 @@ const FEATURES = [
 ];
 
 export default function Home() {
-  const { guest } = useStock();
-  const medicines = guestMedicines(guest);
+  const { medicines, isDemo } = useStock();
   const stock = medicines.reduce((sum, med) => sum + med.stock, 0);
   const demand = medicines.reduce(
     (sum, med) => sum + forecast(med, "none", 30).reduce((s, p) => s + p.forecast, 0),
@@ -34,8 +33,8 @@ export default function Home() {
   const risk = medicines.filter(
     (m) => daysToStockout(m.stock, forecast(m, "none", 30).map((p) => p.forecast)) !== null,
   ).length;
-  const hist = MEDICINES.map((m) => history(m).slice(-30));
-  const fc = MEDICINES.map((m) => forecast(m, "none", 30));
+  const hist = medicines.map((m) => history(m).slice(-30));
+  const fc = medicines.map((m) => forecast(m, "none", 30));
   const chart = [
     ...Array.from({ length: 30 }, (_, i) => ({
       day: i - 30,
@@ -110,7 +109,7 @@ export default function Home() {
           <div className="panel-heading">
             <div>
               <h3>Demand at a glance</h3>
-              <p>All demo medicines · 30-day outlook</p>
+              <p>{isDemo ? "All demo medicines" : "All your medicines"} · 30-day outlook</p>
             </div>
             <Link to="/dashboard">
               Full forecast <ArrowUpRight />
@@ -145,7 +144,12 @@ export default function Home() {
             </Link>
           </div>
           <div className="watchlist">
-            {medicines.length === 0 && <p className="muted small">No medicines yet.</p>}
+            {medicines.length === 0 && (
+              <p className="muted small">
+                No medicines yet — <Link className="link" to="/inventory">add one</Link> or{" "}
+                <Link className="link" to="/import">import a spreadsheet</Link>.
+              </p>
+            )}
             {medicines.map((m) => {
               const day = daysToStockout(m.stock, forecast(m, "none", 30).map((p) => p.forecast));
               return (
@@ -187,7 +191,7 @@ export default function Home() {
 
       <footer className="app-footer">
         <span>Stockout Shield · Thoughtful supply. Uninterrupted care.</span>
-        <span>Demonstration data · Forecasts support professional judgement.</span>
+        <span>{isDemo ? "Demonstration data" : "Live from your saved stock"} · Forecasts support professional judgement.</span>
       </footer>
     </>
   );

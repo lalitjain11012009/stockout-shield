@@ -100,11 +100,13 @@ export function holdoutMetrics(m) {
   return { mae: ae / h.length, rmse: Math.sqrt(se / h.length), mape: (ape / h.length) * 100 };
 }
 
-/** Turns guest stock rows into forecastable medicines (or returns the demo set for accounts). */
-export function guestMedicines(guest) {
-  if (guest === null) return MEDICINES;
+/**
+ * Turns saved stock rows into forecastable medicines. Daily usage becomes the baseline;
+ * known medicine names keep their seasonal/trend profile, others borrow the first profile.
+ */
+export function stockMedicines(rows) {
   const fallback = MEDICINES[0];
-  return guest.map((row) => {
+  return rows.map((row) => {
     const match = MEDICINES.find((m) => m.name === row.name);
     return {
       ...(match ?? fallback),
@@ -114,6 +116,11 @@ export function guestMedicines(guest) {
       base: row.daily_usage || 0,
     };
   });
+}
+
+/** Guest rows as medicines, or the demo set when no guest session exists. */
+export function guestMedicines(guest) {
+  return guest === null ? MEDICINES : stockMedicines(guest);
 }
 
 export const fmt = (n) => Math.round(n).toLocaleString();

@@ -1,10 +1,13 @@
 import { useMemo, useState } from "react";
 import { Area, CartesianGrid, ComposedChart, Line, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { MEDICINES, SCENARIOS, forecast, fmt } from "../lib/forecast.js";
+import { useStock } from "../context/StockContext.jsx";
 
 export default function Explain() {
+  const { medicines: stock } = useStock();
+  const medicines = stock.length ? stock : MEDICINES;
   const [medId, setMedId] = useState(MEDICINES[0].id);
-  const med = MEDICINES.find((m) => m.id === medId) ?? MEDICINES[0];
+  const med = medicines.find((m) => m.id === medId) ?? medicines[0];
   const fc = useMemo(() => forecast(med, "none", 30), [med]);
   const avg = (k) => fc.reduce((s, f) => s + f[k], 0) / fc.length;
 
@@ -57,8 +60,8 @@ export default function Explain() {
         <h3 className="card-title">See it for a medicine</h3>
         <p className="card-subtitle">Watch the forecast being assembled layer by layer.</p>
         <div className="pill-row">
-          {MEDICINES.map((m) => (
-            <button key={m.id} onClick={() => setMedId(m.id)} className={`choice inline ${m.id === medId ? "is-selected" : ""}`}>
+          {medicines.map((m) => (
+            <button key={m.id} onClick={() => setMedId(m.id)} className={`choice inline ${m.id === med.id ? "is-selected" : ""}`}>
               {m.name}
             </button>
           ))}

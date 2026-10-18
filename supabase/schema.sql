@@ -84,3 +84,17 @@ create policy "Users can update their own stock"
 create policy "Users can delete their own stock"
   on public.medicine_stock for delete
   using (auth.uid() = user_id);
+
+-- ============================================================
+-- 3. Live updates (Realtime) for medicine_stock
+--    Lets every open page refresh instantly when stock changes.
+-- ============================================================
+do $$
+begin
+  if not exists (
+    select 1 from pg_publication_tables
+    where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = 'medicine_stock'
+  ) then
+    alter publication supabase_realtime add table public.medicine_stock;
+  end if;
+end $$;

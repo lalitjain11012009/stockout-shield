@@ -4,10 +4,13 @@ import { Phone, Mail, MessageCircle, Clock, MapPin, Send, CheckCircle2, ArrowLef
 import PageHeading from "../components/PageHeading.jsx";
 import { SUPPLIERS } from "../lib/suppliers.js";
 import { MEDICINES } from "../lib/forecast.js";
+import { useStock } from "../context/StockContext.jsx";
 
 const URGENCY_CLASS = { critical: "is-danger", urgent: "is-warning", routine: "" };
 
 export default function Suppliers() {
+  const { medicines: stock } = useStock();
+  const medicines = stock.length ? stock : MEDICINES;
   const [medId, setMedId] = useState(MEDICINES[0].id);
   const [supplierId, setSupplierId] = useState(null);
   const [quantity, setQuantity] = useState(500);
@@ -15,7 +18,7 @@ export default function Suppliers() {
   const [note, setNote] = useState("");
   const [sent, setSent] = useState([]);
 
-  const med = MEDICINES.find((m) => m.id === medId) ?? MEDICINES[0];
+  const med = medicines.find((m) => m.id === medId) ?? medicines[0];
   const selected = SUPPLIERS.find((s) => s.id === supplierId) ?? null;
 
   function sendRequest() {
@@ -43,17 +46,19 @@ export default function Suppliers() {
         <aside>
           <h4 className="side-caption">Medicine needed</h4>
           <div className="stack-sm">
-            {MEDICINES.map((m) => (
+            {medicines.map((m) => (
               <button
                 key={m.id}
                 onClick={() => {
                   setMedId(m.id);
                   setSupplierId(null);
                 }}
-                className={`choice ${m.id === medId ? "is-selected" : ""}`}
+                className={`choice ${m.id === med.id ? "is-selected" : ""}`}
               >
                 <span className="choice-title">{m.name}</span>
-                <span className="choice-sub">{m.category}</span>
+                <span className="choice-sub">
+                  {m.category} · {m.stock.toLocaleString()} in stock
+                </span>
               </button>
             ))}
           </div>

@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import { Area, Bar, BarChart, CartesianGrid, ComposedChart, Legend, Line, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { AlertTriangle, CheckCircle2, Activity } from "lucide-react";
 import PageHeading from "../components/PageHeading.jsx";
@@ -11,13 +12,11 @@ import {
   forecast,
   history,
   holdoutMetrics,
-  guestMedicines,
   fmt,
 } from "../lib/forecast.js";
 
 export default function Dashboard() {
-  const { guest } = useStock();
-  const medicines = useMemo(() => guestMedicines(guest), [guest]);
+  const { medicines } = useStock();
   const [medId, setMedId] = useState(MEDICINES[0].id);
   const [scenario, setScenario] = useState("none");
   const [intensity, setIntensity] = useState(1);
@@ -65,7 +64,11 @@ export default function Dashboard() {
           <section>
             <h4 className="side-caption">Medicine</h4>
             <div className="stack-sm">
-              {medicines.length === 0 && <p className="muted small">No medicines</p>}
+              {medicines.length === 0 && (
+                <p className="muted small">
+                  No medicines yet — <Link className="link" to="/inventory">add your stock</Link> to see its forecast.
+                </p>
+              )}
               {medicines.map((m) => (
                 <button
                   key={m.id}

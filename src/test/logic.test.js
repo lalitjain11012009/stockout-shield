@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { MEDICINES, forecast, history, daysToStockout, guestMedicines } from "../lib/forecast.js";
+import { MEDICINES, forecast, history, daysToStockout, guestMedicines, stockMedicines } from "../lib/forecast.js";
 import { detectColumns, mapRows } from "../lib/excel-import.js";
 import { SUPPLIERS } from "../lib/suppliers.js";
 import { stockCover } from "../lib/inventory.js";
@@ -81,6 +81,16 @@ describe("Stockout Shield logic", () => {
     ]);
     expect(result[0]).toMatchObject({ id: "amox", stock: 45, base: 3, seasonAmp: 0.18 });
     expect(guestMedicines([])).toEqual([]);
+  });
+
+  it("forecasts a signed-in user's own saved stock", () => {
+    const [med] = stockMedicines([
+      { id: "row-uuid", name: "Cetirizine 10mg", category: "Antihistamine", stock: 900, daily_usage: 40, expiry_date: null },
+    ]);
+    expect(med).toMatchObject({ id: "row-uuid", name: "Cetirizine 10mg", stock: 900, base: 40 });
+    const fc = forecast(med, "none", 30);
+    expect(fc).toHaveLength(30);
+    expect(daysToStockout(med.stock, fc.map((p) => p.forecast))).not.toBeNull();
   });
 
   it("keeps all four supplier entries in order", () => {

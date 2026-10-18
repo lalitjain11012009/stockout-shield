@@ -182,5 +182,6 @@ stockout-shield/
 
 - **Guest mode** keeps demo data in the browser tab's `sessionStorage`. It never touches account data, and it is cleared when you exit guest mode.
 - **Forecasts** come from an illustrative deterministic engine (baseline + seasonality + trend + scenario boost) on demonstration data. They support professional judgement, not replace it.
-- **Signed-in accounts** see the fixed demonstration medicines on the forecast pages. Their saved stock appears on Inventory and Import.
+- **Your own data everywhere:** signed-in users and guests see forecasts, alerts and the watchlist for their own saved stock, with each medicine's daily usage as its baseline. Logged-out visitors see the demo medicines.
+- **Live updates:** with Realtime enabled (section 3 of `schema.sql`), adding, editing or deleting stock in one tab or device updates every open page.
 - **Suppliers** are unverified demo contacts. “Send request” only records the request on the page; nothing is actually sent.
